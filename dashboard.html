@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NZ Legislation</title>
+<style>
+  :root {
+    --bg: #f6f6f3; --surface: #ffffff; --ink: #1c1f23; --muted: #5f6670; --line: #e3e3de;
+    --accent: #1f5f5b; --accent-soft: #e3efed;
+    --ok: #2f6b3a; --ok-bg: #e5f1e6; --warn: #8a5a12; --warn-bg: #f7eedc; --off: #7a3434; --off-bg: #f5e3e3;
+    --radius: 10px; --shadow: 0 1px 2px rgb(0 0 0 / .05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141618; --surface: #1c1f22; --ink: #e8e9ea; --muted: #9aa1a9; --line: #2c3035;
+      --accent: #7cc4bc; --accent-soft: #1e3432;
+      --ok: #8fd19b; --ok-bg: #1f3324; --warn: #e5bb73; --warn-bg: #3a2f1c; --off: #e79a9a; --off-bg: #3a2222;
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
+  h1 small { display: block; font-size: 13px; font-weight: 400; color: var(--muted); }
+  .pill { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+  .pill b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .pill.demo { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+
+  form.filters { display: grid; grid-template-columns: 2fr repeat(3, 1fr) auto; gap: 10px; background: var(--surface);
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+  input, select, button { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+    border-radius: 7px; padding: 8px 10px; min-width: 0; }
+  input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.primary { align-self: end; background: var(--accent); color: var(--surface); border-color: transparent; font-weight: 600; cursor: pointer; padding: 8px 18px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .layout { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .layout.open { grid-template-columns: minmax(0, 1fr) 360px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; font-weight: 500; color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--accent-soft); }
+  tbody tr.sel { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+  tbody tr:last-child td { border-bottom: 0; }
+  .title { font-weight: 500; }
+  .sub { font-size: 12px; color: var(--muted); }
+  .date { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--bg); color: var(--muted); white-space: nowrap; }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .badge.off { background: var(--off-bg); color: var(--off); }
+
+  .pager { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+  .pager button { padding: 5px 12px; cursor: pointer; }
+  .pager button:disabled { opacity: .4; cursor: default; }
+
+  .empty, .err { padding: 40px 16px; text-align: center; color: var(--muted); }
+  .err { color: var(--off); }
+
+  aside .head { padding: 14px; border-bottom: 1px solid var(--line); display: flex; gap: 10px; justify-content: space-between; align-items: start; }
+  aside h2 { font-size: 15px; margin: 0; }
+  aside .close { background: none; border: 0; font-size: 20px; line-height: 1; cursor: pointer; color: var(--muted); padding: 2px 6px; }
+  aside dl { margin: 0; padding: 12px 14px; display: grid; grid-template-columns: 90px 1fr; gap: 6px 10px; font-size: 13px; border-bottom: 1px solid var(--line); }
+  aside dt { color: var(--muted); }
+  aside dd { margin: 0; overflow-wrap: anywhere; }
+  aside dd a { color: var(--accent); }
+  aside ol { list-style: none; margin: 0; padding: 6px 0; max-height: 60vh; overflow: auto; }
+  aside li { display: flex; justify-content: space-between; align-items: center; padding: 7px 14px; font-size: 13px; }
+  aside li a { color: var(--accent); text-decoration: none; margin-left: 10px; font-size: 12px; }
+  aside li a:hover { text-decoration: underline; }
+  aside .latest { font-size: 11px; color: var(--accent); margin-left: 6px; }
+  .section-k { padding: 10px 14px 0; font-size: 12px; color: var(--muted); }
+
+  @media (max-width: 900px) {
+    form.filters { grid-template-columns: 1fr 1fr; }
+    form.filters label:first-child { grid-column: 1 / -1; }
+    button.primary { grid-column: 1 / -1; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .layout.open { grid-template-columns: 1fr; }
+    thead { display: none; }
+    tbody tr { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    td { padding: 0; border: 0; }
+    td.c-title { grid-column: 1 / -1; }
+    td.c-agency { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>NZ Legislation<small>Search Acts, Bills and secondary legislation</small></h1>
+    <div style="display:flex;gap:8px">
+      <span class="pill demo" id="demo" hidden>Demo data</span>
+      <span class="pill">API calls left today: <b id="quota">–</b></span>
+    </div>
+  </header>
+
+  <form class="filters" id="f">
+    <label>Title contains<input name="term" placeholder="e.g. privacy, health and safety" autocomplete="off"></label>
+    <label>Type
+      <select name="type">
+        <option value="">All types</option>
+        <option value="act">Acts</option>
+        <option value="bill">Bills</option>
+        <option value="secondary_legislation">Secondary legislation</option>
+        <option value="amendment_paper">Amendment papers</option>
+      </select>
+    </label>
+    <label>Status<select name="status" disabled><option value="">Any status</option></select></label>
+    <label>Sort
+      <select name="sort">
+        <option value="most_recently_updated">Recently updated</option>
+        <option value="title_asc">Title A to Z</option>
+        <option value="title_desc">Title Z to A</option>
+        <option value="year_desc">Newest first</option>
+        <option value="year_asc">Oldest first</option>
+      </select>
+    </label>
+    <button class="primary" type="submit">Search</button>
+  </form>
+
+  <div class="stats">
+    <div class="stat"><div class="k">Total matches</div><div class="v" id="s-total">–</div></div>
+    <div class="stat"><div class="k">Showing</div><div class="v" id="s-showing">–</div></div>
+    <div class="stat"><div class="k">In force / current</div><div class="v" id="s-live">–</div></div>
+    <div class="stat"><div class="k">Most recent version</div><div class="v" id="s-latest">–</div></div>
+  </div>
+
+  <div class="layout" id="layout">
+    <div class="card">
+      <table>
+        <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Administered by</th><th>Latest version</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div id="msg" class="empty">Loading…</div>
+      <div class="pager" id="pager" hidden>
+        <button type="button" id="prev">Previous</button>
+        <span id="pageinfo"></span>
+        <button type="button" id="next">Next</button>
+      </div>
+    </div>
+    <aside class="card" id="detail" hidden></aside>
+  </div>
+</div>
+
+<script>
+const DEMO = __DEMO__;
+const STATUSES = {
+  act: [["in_force", "In force"], ["not_in_force", "Not yet in force"], ["repealed", "Repealed"]],
+  bill: [["current", "Current"], ["enacted", "Enacted"], ["terminated", "Terminated"]],
+  secondary_legislation: [["in_force", "In force"], ["not_in_force", "Not yet in force"]],
+};
+const TYPE_LABEL = { act: "Act", bill: "Bill", secondary_legislation: "Secondary", amendment_paper: "Amendment paper" };
+const LIVE = new Set(["in_force", "current"]);
+const OFF = new Set(["repealed", "terminated", "revoked", "expired"]);
+
+const $ = (id) => document.getElementById(id);
+const form = $("f");
+let page = 1, selected = null, lastQuery = "";
+
+function el(tag, props = {}, ...kids) {
+  const n = Object.assign(document.createElement(tag), props);
+  for (const k of kids) if (k != null) n.append(k);
+  return n;
+}
+const pretty = (s) => s ? s.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()) : "–";
+function fmtDate(d) {
+  if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return d || "–";
+  return new Date(d + "T00:00:00").toLocaleDateString("en-NZ", { day: "numeric", month: "short", year: "numeric" });
+}
+function badge(status) {
+  const cls = LIVE.has(status) ? "ok" : OFF.has(status) ? "off" : status ? "warn" : "";
+  return el("span", { className: "badge " + cls, textContent: pretty(status) });
+}
+function setQuota(n) { if (n != null) $("quota").textContent = Number(n).toLocaleString("en-NZ"); }
+
+async function api(path) {
+  const r = await fetch(path);
+  const body = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+  if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+  return body;
+}
+
+function syncStatus() {
+  const sel = form.status, opts = STATUSES[form.type.value];
+  sel.replaceChildren(el("option", { value: "", textContent: "Any status" }));
+  if (opts) for (const [v, t] of opts) sel.append(el("option", { value: v, textContent: t }));
+  sel.disabled = !opts;
+}
+
+async function load() {
+  const params = new URLSearchParams(new FormData(form));
+  params.set("page", page);
+  const query = params.toString();
+  lastQuery = query;
+  $("msg").hidden = false; $("msg").className = "empty"; $("msg").textContent = "Loading…";
+  $("rows").replaceChildren();
+  try {
+    const d = await api("/api/search?" + query);
+    if (query !== lastQuery) return;
+    render(d);
+  } catch (e) {
+    $("msg").className = "err"; $("msg").textContent = e.message;
+    $("pager").hidden = true;
+  }
+}
+
+function render(d) {
+  setQuota(d.remaining);
+  const rows = d.results;
+  $("s-total").textContent = d.total.toLocaleString("en-NZ");
+  const from = rows.length ? (d.page - 1) * d.per_page + 1 : 0;
+  $("s-showing").textContent = rows.length ? `${from}–${from + rows.length - 1}` : "0";
+  $("s-live").textContent = rows.filter((r) => LIVE.has(r.status)).length + " of " + rows.length;
+  const latest = rows.map((r) => r.version_date).filter(Boolean).sort().pop();
+  $("s-latest").textContent = fmtDate(latest);
+
+  $("rows").replaceChildren(...rows.map((r) => {
+    const tr = el("tr", { tabIndex: 0 },
+      el("td", { className: "c-title" }, el("div", { className: "title", textContent: r.title }), el("div", { className: "sub", textContent: r.work_id })),
+      el("td", {}, el("span", { className: "badge", textContent: TYPE_LABEL[r.type] || pretty(r.type) })),
+      el("td", {}, badge(r.status)),
+      el("td", { className: "c-agency sub", textContent: r.agencies.join(", ") || r.publisher || "–" }),
+      el("td", { className: "date", textContent: fmtDate(r.version_date) }),
+    );
+    if (selected === r.work_id) tr.classList.add("sel");
+    const open = () => showDetail(r, tr);
+    tr.addEventListener("click", open);
+    tr.addEventListener("keydown", (e) => { if (e.key === "Enter") open(); });
+    return tr;
+  }));
+
+  $("msg").hidden = rows.length > 0;
+  if (!rows.length) { $("msg").className = "empty"; $("msg").textContent = "No legislation matches those filters."; }
+
+  const pages = Math.max(1, Math.ceil(d.total / d.per_page));
+  $("pager").hidden = pages <= 1;
+  $("pageinfo").textContent = `Page ${d.page} of ${pages.toLocaleString("en-NZ")}`;
+  $("prev").disabled = d.page <= 1;
+  $("next").disabled = d.page >= pages;
+}
+
+async function showDetail(r, tr) {
+  selected = r.work_id;
+  document.querySelectorAll("tbody tr.sel").forEach((n) => n.classList.remove("sel"));
+  tr.classList.add("sel");
+  const aside = $("detail");
+  aside.hidden = false; $("layout").classList.add("open");
+
+  const close = el("button", { className: "close", type: "button", title: "Close", textContent: "×" });
+  close.onclick = () => { aside.hidden = true; $("layout").classList.remove("open"); selected = null; tr.classList.remove("sel"); };
+  const links = el("dd");
+  if (r.html_url) links.append(el("a", { href: r.html_url, target: "_blank", rel: "noopener", textContent: "HTML" }));
+  if (r.pdf_url) links.append(" · ", el("a", { href: r.pdf_url, target: "_blank", rel: "noopener", textContent: "PDF" }));
+  const list = el("ol", {}, el("li", { className: "sub", textContent: "Loading versions…" }));
+
+  aside.replaceChildren(
+    el("div", { className: "head" }, el("h2", { textContent: r.title }), close),
+    el("dl", {},
+      el("dt", { textContent: "Type" }), el("dd", { textContent: TYPE_LABEL[r.type] || pretty(r.type) }),
+      el("dt", { textContent: "Status" }), el("dd", {}, badge(r.status)),
+      el("dt", { textContent: "Agency" }), el("dd", { textContent: r.agencies.join(", ") || "–" }),
+      el("dt", { textContent: "Publisher" }), el("dd", { textContent: r.publisher || "–" }),
+      el("dt", { textContent: "Work ID" }), el("dd", { textContent: r.work_id }),
+      el("dt", { textContent: "Open" }), links.childNodes.length ? links : el("dd", { textContent: "–" }),
+    ),
+    el("div", { className: "section-k", textContent: "Version history" }),
+    list,
+  );
+
+  try {
+    const d = await api("/api/versions/" + encodeURIComponent(r.work_id));
+    if (selected !== r.work_id) return;
+    setQuota(d.remaining);
+    list.replaceChildren(...(d.results.length ? d.results.map((v, i) => {
+      const li = el("li", {}, el("span", {}, el("span", { className: "date", textContent: fmtDate(v.date) }),
+        i === 0 ? el("span", { className: "latest", textContent: "latest" }) : null));
+      const fm = el("span");
+      for (const [k, u] of Object.entries(v.formats)) fm.append(el("a", { href: u, target: "_blank", rel: "noopener", textContent: k.toUpperCase() }));
+      li.append(fm);
+      return li;
+    }) : [el("li", { className: "sub", textContent: "No versions returned." })]));
+  } catch (e) {
+    list.replaceChildren(el("li", { className: "sub", textContent: e.message }));
+  }
+}
+
+form.type.addEventListener("change", syncStatus);
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  page = 1; selected = null;
+  $("detail").hidden = true; $("layout").classList.remove("open");
+  load();
+});
+$("prev").onclick = () => { page--; load(); };
+$("next").onclick = () => { page++; load(); };
+$("demo").hidden = !DEMO;
+syncStatus();
+load();
+</script>
+</body>
+</html>
